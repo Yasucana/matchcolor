@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Match - Day 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #color-name {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        #score {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        #color-boxes {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+        }
+        .color-box {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            border: 2px solid #333;
+            border-radius: 10px;
+        }
+        .color-box:hover {
+            opacity: 0.8;
+        }
+        #score-board {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            font-size: 1.2em;
+        }
+        #image-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        #image-container img {
+            max-width: 80%;
+            max-height: 80%;
+        }
+        #return-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="score-board">
+        <div>過去のスコア:</div>
+        <div id="past-scores"></div>
+    </div>
+    <div id="score">スコア: 0</div>
+    <div id="color-name"></div>
+    <div id="color-boxes"></div>
+    <div id="image-container">
+        <img src="ne.jpg" alt="ne">
+        <button id="return-button">ゲームに戻る</button>
+    </div>
+
+    <script>
+        const colors = [
+            { name: '赤', value: '#ff0000' },
+            { name: '青', value: '#0000ff' },
+            { name: '緑', value: '#00ff00' },
+            { name: '黄', value: '#ffff00' },
+            { name: '紫', value: '#800080' }
+        ];
+        let score = 0;
+        let correctColor;
+        let pastScores = [];
+
+        const scoreDisplay = document.getElementById('score');
+        const colorNameDisplay = document.getElementById('color-name');
+        const colorBoxes = document.getElementById('color-boxes');
+        const pastScoresDisplay = document.getElementById('past-scores');
+        const imageContainer = document.getElementById('image-container');
+        const returnButton = document.getElementById('return-button');
+
+        function startGame() {
+            // ランダムに正解の色を選択
+            correctColor = colors[Math.floor(Math.random() * colors.length)];
+            // 表示する色名は正解の色名
+            const displayColor = correctColor;
+            colorNameDisplay.textContent = displayColor.name;
+
+            // ボックスをシャッフルして表示
+            colorBoxes.innerHTML = '';
+            const shuffledColors = [...colors].sort(() => Math.random() - 0.5);
+            shuffledColors.forEach(color => {
+                const box = document.createElement('div');
+                box.className = 'color-box';
+                box.style.backgroundColor = color.value;
+                box.addEventListener('click', () => checkAnswer(color));
+                colorBoxes.appendChild(box);
+            });
+
+            // スコアが10以上の場合、文字の色をランダムに設定
+            if (score >= 10) {
+                let randomColor;
+                do {
+                    randomColor = colors[Math.floor(Math.random() * colors.length)];
+                } while (randomColor.value === correctColor.value);
+                colorNameDisplay.style.color = randomColor.value;
+            } else {
+                colorNameDisplay.style.color = ''; // デフォルトの色に戻す
+            }
+        }
+
+        function checkAnswer(selectedColor) {
+            if (selectedColor.value === correctColor.value) {
+                score++;
+                scoreDisplay.textContent = `スコア: ${score}`;
+                startGame(); // 正解なら次のラウンド
+            } else {
+                pastScores.push(score);
+                if (pastScores.length > 3) {
+                    pastScores.shift();
+                }
+                updatePastScores();
+                if (pastScores.length > 0 && score < Math.max(...pastScores)) {
+                    showImage();
+                } else {
+                    alert('間違い！スコアがリセットされました。');
+                    score = 0;
+                    scoreDisplay.textContent = `スコア: ${score}`;
+                    startGame(); // 間違ったらリセットして再スタート
+                }
+            }
+        }
+
+        function updatePastScores() {
+            pastScoresDisplay.innerHTML = pastScores.map(s => `<div>${s}</div>`).join('');
+        }
+
+        function showImage() {
+            imageContainer.style.display = 'flex';
+        }
+
+        returnButton.addEventListener('click', () => {
+            imageContainer.style.display = 'none';
+            score = 0;
+            scoreDisplay.textContent = `スコア: ${score}`;
+            startGame();
+        });
+
+        // ゲーム開始
+        startGame();
+    </script>
+</body>
+</html>
